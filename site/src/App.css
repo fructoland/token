@@ -1,0 +1,14 @@
+.token {
+	border-radius: 50%;
+	width: 10rem;
+	height: 10rem;
+	margin: 0 auto;
+	display: block;
+}
+
+.header {
+	display: flex;
+	flex-flow: column nowrap;
+	gap: .5rem;
+	text-align: center;
+}
