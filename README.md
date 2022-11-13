@@ -1,4 +1,4 @@
-# Fructo Token (FSHARE)
+# Fructo Token (FRCTO)
 
 Fructo Token is part of our restructure to become a DAO.
 
