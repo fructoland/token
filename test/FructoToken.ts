@@ -114,7 +114,8 @@ describe("Fructo Token", function () {
 			await fructoToken.connect(otherAccount)
 				.mint(mintAmount, { value: mintingFee.mul(mintAmount) });
 
-			expect(await fructoToken.balanceOf(otherAccount.address)).to.equal(mintAmount);
+			expect(await fructoToken.balanceOf(otherAccount.address))
+				.to.equal(ethers.utils.parseEther(mintAmount.toString()));
 		});
 
 		it("Should not allow users to mint tokens if they don't pay enough", async function () {

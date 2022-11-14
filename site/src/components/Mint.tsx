@@ -1,44 +1,112 @@
-import { ethers } from "ethers";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { abi } from "../assets/abi.json";
+import { useAccount, useConnect, useNetwork, useSwitchNetwork, usePrepareContractWrite, useContractWrite } from "wagmi";
+import { InjectedConnector } from "wagmi/connectors/injected";
+import { BigNumber, ethers } from "ethers";
+import {CHAIN} from "../main";
 
-declare global {
-    interface Window {
-        ethereum: any;
-    }
+interface Props {
+	mintingFee: BigNumber;
+	isMintingFeeError: boolean;
+	isMintingFeeLoading: boolean;
 }
 
-export default function Mint() {
-	const [currentAccount, setCurrentAccount] = useState("");
+export default function Mint({ mintingFee, isMintingFeeError, isMintingFeeLoading }: Props) {
+	const [ amount, setAmount ] = useState(1);
+	const { isConnected, address } = useAccount();
+	const { connect, isLoading: isAccountLoading } = useConnect({
+		connector: new InjectedConnector()
+	});
 
-	const handleConnect = async () => {
-		if (!("ethereum" in window)) {
-			alert("Please install MetaMask to use this app.");
-			return;
+	const { chain } = useNetwork()
+
+	const { switchNetwork, isLoading: isSwitchingLoading } = useSwitchNetwork({
+		chainId: CHAIN.id
+	});
+	const { config } = usePrepareContractWrite({
+		address: import.meta.env.VITE_CONTRACT_ADDRESS,
+		abi,
+		functionName: "mint",
+		args: [amount],
+		overrides: {
+			value: mintingFee.mul(amount)
 		}
+	});
+	const { write: startTransaction, isLoading: isMintingLoading } = useContractWrite(config);
 
-		try {
-			const provider = new ethers.providers.Web3Provider(window["ethereum"]);
-			await provider.send("eth_requestAccounts", []);
-
-			const signer = provider.getSigner();
-			const address = await signer.getAddress();
-
-			setCurrentAccount(address);
-		} catch (error) {
-			console.log(error);
-		}
-	}
-
-	return currentAccount ? (
-		<button style={{ display: "block", margin: "0 auto" }}>
-			Mint
-		</button>
+	return isConnected && address ? (
+		<>
+			{chain?.network !== CHAIN.network ? (
+				<>
+					<p 
+						style={{
+							color: "red",
+							textAlign: "center"
+						}}
+					>
+						You are connected to the {chain?.name} network. Please switch to the
+						Polygon network to mint tokens.
+					</p>
+					{switchNetwork && (
+						<button
+							onClick={() => switchNetwork()}
+							disabled={isSwitchingLoading}
+							style={{
+								display: "block",
+								margin: "0 auto",
+								marginTop: ".5rem"
+							}}
+						>
+							{isSwitchingLoading ? "Switching..." : "Switch Network"}
+						</button>
+					)}
+				</>
+			) : (
+				<p
+					style={{
+						textAlign: "center",
+					}}
+				>
+					Connected as {address.slice(0, 6)}...{address.slice(-4)}
+				</p>
+			)}
+			<p
+				style={{
+					textAlign: "center"
+				}}
+			>
+				{isMintingFeeLoading ?
+					"Loading minting fee..." :
+					isMintingFeeError ?
+						"Error loading minting fee" :
+						`Minting fee: ${ethers.utils.formatEther(mintingFee as BigNumber)} MATIC`
+				}
+			</p>
+			<input
+				type="number"
+				value={amount}
+				onChange={e => setAmount(parseInt(e.target.value) || 1)}
+				style={{
+					display: "block",
+					margin: "0 auto",
+					marginTop: ".5rem"
+				}}
+			/>
+			<button 
+				style={{ display: "block", margin: "0 auto", marginTop: ".5rem" }}
+				disabled={chain?.network !== CHAIN.network || !startTransaction || isMintingLoading ? true : false}
+				onClick={() => startTransaction?.()}
+			>
+				{isMintingLoading ? "Minting..." : "Mint"}
+			</button>
+		</>
 	) : (
 		<button 
 			style={{ display: "block", margin: "0 auto" }}
-			onClick={handleConnect}
+			onClick={() => connect()}
+			disabled={isAccountLoading}
 		>
-			Connect wallet
+			{isAccountLoading ? "Connecting..." : "Connect Wallet"}
 		</button>
 	)
 }

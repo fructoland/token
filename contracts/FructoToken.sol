@@ -25,7 +25,7 @@ contract FructoToken is ERC20, ERC20Burnable, Ownable, Pausable, ERC20Permit, ER
 		require(mintingEnabled, "Minting is disabled");
 		require(!paused(), "Pausable: paused");
 		require(msg.value == mintingFee * amount, "Incorrect minting fee");
-		_mint(msg.sender, amount);
+		_mint(msg.sender, amount * 10 ** decimals());
     }
 
 	function getMintingFee() public view returns (uint256) {
