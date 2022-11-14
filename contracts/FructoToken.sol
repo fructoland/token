@@ -9,14 +9,16 @@ import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 
 contract FructoToken is ERC20, ERC20Burnable, Ownable, Pausable, ERC20Permit, ERC20Votes {
-	bool internal mintingEnabled = true;
+	bool internal mintingEnabled;
 	// This is not really ether
 	// Since we are deploying on the Polygon network
 	// This is the MATIC token
-	uint256 internal mintingFee = 100 ether;
+	uint256 internal mintingFee;
 
     constructor() ERC20("Fructo Token", "FRCTO") ERC20Permit("Fructo Token") {
 		_mint(msg.sender, 10000 * 10 ** decimals());
+		mintingFee = 1 ether;
+		mintingEnabled = true;
 	}
 
     function mint(uint256 amount) public payable {
