@@ -1,4 +1,5 @@
 import "./App.css";
+import Mint from "./components/Mint";
 import tokenImage from "./assets/token.png";
 import Footer from "./components/Footer";
 
@@ -19,13 +20,7 @@ export default function App() {
 
 		<br />
 
-		<div className="card">
-			<p>				
-				⚠️ At the moment, the Fructo Token is not yet mintable. This means that you
-				cannot mint new tokens. Access to Fructo Tokens is limited to the
-				community members who have been invited to the Fructo DAO.
-			</p>
-		</div>
+		<Mint />
 
 		<br />
 
