@@ -2,7 +2,7 @@
 	"name": "hardhat-project",
 	"private": true,
 	"scripts": {
-		"build": "hardhat compile && cp artifacts/contracts/FructoToken.sol/FructoToken.json src/assets/abi.json",
+		"build": "hardhat compile && cp artifacts/contracts/FructoToken.sol/FructoToken.json site/src/assets/abi.json",
 		"test": "hardhat test"
 	},
   	"devDependencies": {
