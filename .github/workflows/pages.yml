@@ -30,6 +30,12 @@ jobs:
         uses: actions/setup-node@v3.5.0
         with:
           node-version: 16
+      - name: Install contract modules
+        run: |
+            npm ci
+            npm run build
+          working-directory: ./
+
       - name: Install modules
         run: npm ci
       - name: Build App
