@@ -40,6 +40,10 @@ contract FructoToken is ERC20, ERC20Burnable, Ownable, Pausable, ERC20Permit, ER
 		mintingFee = fee;
 	}
 
+	function withdraw() public onlyOwner {
+		payable(msg.sender).transfer(address(this).balance);
+	}
+
 	function pause() public onlyOwner {
         _pause();
     }

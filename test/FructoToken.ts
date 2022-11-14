@@ -167,6 +167,20 @@ describe("Fructo Token", function () {
 
 			expect(finalOwnerBalance).to.equal(initialOwnerBalance.sub(ethers.utils.parseEther("10")));
 		});
+
+		it("Should let owner withdraw MATIC", async function () {
+			const { owner, otherAccount, fructoToken, mintingFee } = await loadFixture(deployFructoTokenFixture);
+
+			const initialOwnerBalance = await owner.getBalance();
+
+			await fructoToken.connect(otherAccount).mint(1, {
+				value: mintingFee
+			})
+
+			await fructoToken.withdraw();
+
+			expect(await owner.getBalance()).to.be.gt(initialOwnerBalance);
+		});
 	});
 
 	describe("Allowances", function () {
