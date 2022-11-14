@@ -9,7 +9,9 @@ describe("Fructo Token", function () {
 		const FructoToken = await ethers.getContractFactory("FructoToken");
 		const fructoToken = await FructoToken.deploy();
 
-    	return { owner, otherAccount, fructoToken };
+		const mintingFee = await fructoToken.getMintingFee();
+
+    	return { owner, otherAccount, fructoToken, mintingFee };
   	}
 
 	describe("Deployment", function () {
@@ -28,19 +30,112 @@ describe("Fructo Token", function () {
 		it("Should have a symbol", async function () {
 			const { fructoToken } = await loadFixture(deployFructoTokenFixture);
 
-			expect(await fructoToken.symbol()).to.equal("FSHARE");
+			expect(await fructoToken.symbol()).to.equal("FRCTO");
 		});
+	});
 
-		it("Should have a total supply of 100 tokens", async function () {
+	describe("Pausing", function () {
+		it("Should be unpaused by default", async function () {
 			const { fructoToken } = await loadFixture(deployFructoTokenFixture);
-			
-			expect(await fructoToken.totalSupply()).to.equal(ethers.utils.parseEther("100"));
+
+			expect(await fructoToken.paused()).to.be.false;
 		});
 
-		it("Should assign the total supply of tokens to the owner", async function () {
-			const { owner, fructoToken } = await loadFixture(deployFructoTokenFixture);
+		it("Should be able to be paused by the owner", async function () {
+			const { fructoToken } = await loadFixture(deployFructoTokenFixture);
+
+			await fructoToken.pause();
+
+			expect(await fructoToken.paused()).to.be.true;
+		});
+
+		it("Should not be able to be paused by a non-owner", async function () {
+			const { fructoToken, otherAccount } = await loadFixture(deployFructoTokenFixture);
+
+			await expect(fructoToken.connect(otherAccount).pause()).to.be.revertedWith("Ownable: caller is not the owner");
+		});
+
+		it("Should be able to be unpaused by the owner", async function () {
+			const { fructoToken } = await loadFixture(deployFructoTokenFixture);
+
+			await fructoToken.pause();
+			await fructoToken.unpause();
+
+			expect(await fructoToken.paused()).to.be.false;
+		});
+
+		it("Should not be able to be unpaused by a non-owner", async function () {
+			const { fructoToken, otherAccount } = await loadFixture(deployFructoTokenFixture);
+
+			await fructoToken.pause();
+
+			await expect(fructoToken.connect(otherAccount).unpause()).to.be.revertedWith("Ownable: caller is not the owner");
+		});
+
+		it("Should not be able to transfer tokens when paused", async function () {
+			const { fructoToken, owner } = await loadFixture(deployFructoTokenFixture);
+
+			await fructoToken.pause();
+
+			await expect(fructoToken.transfer(owner.address, 1)).to.be.revertedWith("Pausable: paused");
+		});
+
+		it("Should not be able to mint tokens when paused", async function () {
+			const { fructoToken, otherAccount } = await loadFixture(deployFructoTokenFixture);
+
+			await fructoToken.pause();
+
+			await expect(fructoToken.connect(otherAccount).mint(1, { value: ethers.utils.parseEther("0.1") }))
+				.to.be.revertedWith("Pausable: paused");
+		});
+	});
+
+	describe("Minting and burning", function () {
+		it("Should receive minting fee", async function () {
+			const { fructoToken } = await loadFixture(deployFructoTokenFixture);
+
+			expect(await fructoToken.getMintingFee());
+			// Also display minting fee
+			console.log("Minting fee: " + await fructoToken.getMintingFee());
+		});
+
+		it("Should allow users to mint tokens", async function () {
+			// Allows users to mint tokens
+			// Minting tokens costs 0.01 ETH
+			// The minting fee should be equal to 0.01 ETH * minting amount
+			// Minting tokens gives the requested amount of tokens
 			
-			expect(await fructoToken.balanceOf(owner.address)).to.equal(await fructoToken.totalSupply());
+			const { otherAccount, fructoToken, mintingFee } = await loadFixture(deployFructoTokenFixture);
+
+			const mintAmount = 10;
+
+			expect(await fructoToken.balanceOf(otherAccount.address)).to.equal(0);
+
+			await fructoToken.connect(otherAccount)
+				.mint(mintAmount, { value: mintingFee.mul(mintAmount) });
+
+			expect(await fructoToken.balanceOf(otherAccount.address)).to.equal(mintAmount);
+		});
+
+		it("Should not allow users to mint tokens if they don't pay enough", async function () {
+			const { otherAccount, fructoToken, mintingFee } = await loadFixture(deployFructoTokenFixture);
+
+
+			const mintAmount = 10;
+
+			await expect(fructoToken.connect(otherAccount)
+				.mint(mintAmount, { value: mintingFee.mul(mintAmount).sub(1) }))
+				.to.be.revertedWith("Incorrect minting fee");
+		});
+
+		it("Should allow holder to burn tokens", async function () {
+			const { otherAccount, fructoToken } = await loadFixture(deployFructoTokenFixture);
+
+			await fructoToken.transfer(otherAccount.address, ethers.utils.parseEther("10"));
+
+			await fructoToken.connect(otherAccount).burn(ethers.utils.parseEther("10"));
+
+			expect(await fructoToken.balanceOf(otherAccount.address)).to.equal(0);
 		});
 	});
 
@@ -71,43 +166,6 @@ describe("Fructo Token", function () {
 			const finalOwnerBalance = await fructoToken.balanceOf(owner.address);
 
 			expect(finalOwnerBalance).to.equal(initialOwnerBalance.sub(ethers.utils.parseEther("10")));
-		});
-	});
-
-	describe("Minting and burning", function () {
-		it("Should allow owner to mint tokens", async function () {
-			const { owner, fructoToken } = await loadFixture(deployFructoTokenFixture);
-
-			await fructoToken.mint(owner.address, ethers.utils.parseEther("10"));
-
-			expect(await fructoToken.balanceOf(owner.address)).to.equal(ethers.utils.parseEther("110"));
-		});
-
-		it("Should not allow non-owner to mint tokens", async function () {
-			const { otherAccount, fructoToken } = await loadFixture(deployFructoTokenFixture);
-
-			await expect(fructoToken.connect(otherAccount)
-						.mint(otherAccount.address, ethers.utils.parseEther("10")))
-						.to.be.revertedWith("Ownable: caller is not the owner");
-		});
-
-		it("Should allow holder to burn tokens", async function () {
-			const { otherAccount, fructoToken } = await loadFixture(deployFructoTokenFixture);
-
-			await fructoToken.transfer(otherAccount.address, ethers.utils.parseEther("10"));
-
-			await fructoToken.connect(otherAccount).burn(ethers.utils.parseEther("10"));
-
-			expect(await fructoToken.balanceOf(otherAccount.address)).to.equal(0);
-			expect(await fructoToken.totalSupply()).to.equal(ethers.utils.parseEther("90"));
-		});
-
-		it("Should not allow non-holder to burn tokens", async function () {
-			const { otherAccount, fructoToken } = await loadFixture(deployFructoTokenFixture);
-
-			await expect(fructoToken.connect(otherAccount)
-						.burn(ethers.utils.parseEther("10")))
-						.to.be.revertedWith("ERC20: burn amount exceeds balance");
 		});
 	});
 
