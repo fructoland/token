@@ -17,7 +17,7 @@ contract FructoToken is ERC20, ERC20Burnable, Ownable, Pausable, ERC20Permit, ER
 
     constructor() ERC20("Fructo Token", "FRCTO") ERC20Permit("Fructo Token") {
 		_mint(msg.sender, 10000 * 10 ** decimals());
-		mintingFee = 1 ether;
+		mintingFee = 0.6 ether;
 		mintingEnabled = true;
 	}
 
