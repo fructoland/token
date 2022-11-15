@@ -12,7 +12,7 @@ interface Props {
 }
 
 export default function Mint({ mintingFee, isMintingFeeError, isMintingFeeLoading }: Props) {
-	const [ amount, setAmount ] = useState(1);
+	const [ amountInput, setAmountInput ] = useState("1");
 	const { isConnected, address } = useAccount();
 	const { connect, isLoading: isAccountLoading } = useConnect({
 		connector: new InjectedConnector()
@@ -27,12 +27,13 @@ export default function Mint({ mintingFee, isMintingFeeError, isMintingFeeLoadin
 		address: import.meta.env.VITE_CONTRACT_ADDRESS,
 		abi,
 		functionName: "mint",
-		args: [amount],
+		args: [parseInt(amountInput) || 1],
 		overrides: {
-			value: mintingFee.mul(amount)
+			value: mintingFee.mul(parseInt(amountInput) || 1)
 		}
 	});
 	const { write: startTransaction, isLoading: isMintingLoading } = useContractWrite(config);
+
 
 	return isConnected && address ? (
 		<>
@@ -84,21 +85,23 @@ export default function Mint({ mintingFee, isMintingFeeError, isMintingFeeLoadin
 			</p>
 			<input
 				type="number"
-				value={amount}
-				onChange={e => setAmount(parseInt(e.target.value) || 1)}
+				value={amountInput}
+				onChange={e => setAmountInput(e.target.value)}
 				style={{
 					display: "block",
 					margin: "0 auto",
 					marginTop: ".5rem"
 				}}
 			/>
-			<button 
-				style={{ display: "block", margin: "0 auto", marginTop: ".5rem" }}
-				disabled={chain?.network !== CHAIN.network || !startTransaction || isMintingLoading ? true : false}
-				onClick={() => startTransaction?.()}
-			>
-				{isMintingLoading ? "Minting..." : "Mint"}
-			</button>
+			<div>
+				<button 
+					style={{ display: "block", margin: "0 auto", marginTop: ".5rem" }}
+					disabled={chain?.network !== CHAIN.network || !startTransaction || isMintingLoading ? true : false}
+					onClick={() => startTransaction?.()}
+				>
+					{isMintingLoading ? "Minting..." : "Mint"}
+				</button>
+			</div>
 		</>
 	) : (
 		<button 

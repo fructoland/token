@@ -55,6 +55,16 @@ export default function App() {
 					The more tokens you have, the more voting power you have.
 				</p>
 			</div>
+			<div className="card" style={{ marginTop: ".5rem" }}>
+				<p>
+					❓Dont see your tokens? Make sure you are connected to the Polygon
+					network and that you have minted tokens.
+					<br/>
+					<br/>
+					👉 If you are connected to the Polygon network and still dont see your
+					tokens, import token address <code>{import.meta.env.VITE_CONTRACT_ADDRESS}</code> in your wallet.
+				</p>
+			</div>
 			<Footer />
 		</main>
   	);
