@@ -2,16 +2,14 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 
-describe("Fructo Token", function () {
+describe("Fructoland Token (FRLND)", function () {
   	async function deployFructoTokenFixture() {
 		const [owner, otherAccount] = await ethers.getSigners();
 
-		const FructoToken = await ethers.getContractFactory("FructoToken");
+		const FructoToken = await ethers.getContractFactory("FructolandToken");
 		const fructoToken = await FructoToken.deploy();
 
-		const mintingFee = await fructoToken.getMintingFee();
-
-    	return { owner, otherAccount, fructoToken, mintingFee };
+    	return { owner, otherAccount, fructoToken };
   	}
 
 	describe("Deployment", function () {
@@ -24,13 +22,13 @@ describe("Fructo Token", function () {
 		it("Should have a name", async function () {
 			const { fructoToken } = await loadFixture(deployFructoTokenFixture);
 			
-			expect(await fructoToken.name()).to.equal("Fructo Token");
+			expect(await fructoToken.name()).to.equal("Fructoland Token");
 		});
 
 		it("Should have a symbol", async function () {
 			const { fructoToken } = await loadFixture(deployFructoTokenFixture);
 
-			expect(await fructoToken.symbol()).to.equal("FRCTO");
+			expect(await fructoToken.symbol()).to.equal("FRLND");
 		});
 	});
 
@@ -85,48 +83,24 @@ describe("Fructo Token", function () {
 
 			await fructoToken.pause();
 
-			await expect(fructoToken.connect(otherAccount).mint(1, { value: ethers.utils.parseEther("0.1") }))
-				.to.be.revertedWith("Pausable: paused");
+			await expect(fructoToken.mint(otherAccount.address, 1)).to.be.revertedWith("Pausable: paused");
 		});
 	});
 
 	describe("Minting and burning", function () {
-		it("Should receive minting fee", async function () {
-			const { fructoToken } = await loadFixture(deployFructoTokenFixture);
+		it("Should be able to mint tokens", async function () {
+			const { fructoToken, otherAccount } = await loadFixture(deployFructoTokenFixture);
 
-			expect(await fructoToken.getMintingFee());
-			// Also display minting fee
-			console.log("Minting fee: " + await fructoToken.getMintingFee());
+			await fructoToken.mint(otherAccount.address, 1000);
+
+			expect(await fructoToken.balanceOf(otherAccount.address)).to.equal(1000);
 		});
 
-		it("Should allow users to mint tokens", async function () {
-			// Allows users to mint tokens
-			// Minting tokens costs 0.01 ETH
-			// The minting fee should be equal to 0.01 ETH * minting amount
-			// Minting tokens gives the requested amount of tokens
-			
-			const { otherAccount, fructoToken, mintingFee } = await loadFixture(deployFructoTokenFixture);
-
-			const mintAmount = 10;
-
-			expect(await fructoToken.balanceOf(otherAccount.address)).to.equal(0);
-
-			await fructoToken.connect(otherAccount)
-				.mint(mintAmount, { value: mintingFee.mul(mintAmount) });
-
-			expect(await fructoToken.balanceOf(otherAccount.address))
-				.to.equal(ethers.utils.parseEther(mintAmount.toString()));
-		});
-
-		it("Should not allow users to mint tokens if they don't pay enough", async function () {
-			const { otherAccount, fructoToken, mintingFee } = await loadFixture(deployFructoTokenFixture);
-
-
-			const mintAmount = 10;
+		it("Shouldn't allow users to mint tokens", async function () {
+			const { fructoToken, otherAccount } = await loadFixture(deployFructoTokenFixture);
 
 			await expect(fructoToken.connect(otherAccount)
-				.mint(mintAmount, { value: mintingFee.mul(mintAmount).sub(1) }))
-				.to.be.revertedWith("Incorrect minting fee");
+						.mint(otherAccount.address, 1000)).to.be.revertedWith("Ownable: caller is not the owner");
 		});
 
 		it("Should allow holder to burn tokens", async function () {
@@ -167,20 +141,6 @@ describe("Fructo Token", function () {
 			const finalOwnerBalance = await fructoToken.balanceOf(owner.address);
 
 			expect(finalOwnerBalance).to.equal(initialOwnerBalance.sub(ethers.utils.parseEther("10")));
-		});
-
-		it("Should let owner withdraw MATIC", async function () {
-			const { owner, otherAccount, fructoToken, mintingFee } = await loadFixture(deployFructoTokenFixture);
-
-			const initialOwnerBalance = await owner.getBalance();
-
-			await fructoToken.connect(otherAccount).mint(1, {
-				value: mintingFee
-			})
-
-			await fructoToken.withdraw();
-
-			expect(await owner.getBalance()).to.be.gt(initialOwnerBalance);
 		});
 	});
 

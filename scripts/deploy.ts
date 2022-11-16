@@ -1,10 +1,10 @@
 import { ethers } from "hardhat";
 
 async function main() {
-	const FructoToken = await ethers.getContractFactory("FructoToken");
-	const fructoToken = await FructoToken.deploy();
+	const FructolandToken = await ethers.getContractFactory("FructolandToken");
+	const fructolandToken = await FructolandToken.deploy();
 
-	console.log("FructoToken deployed to:", fructoToken.address);
+	console.log("FructoToken deployed to:", fructolandToken.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

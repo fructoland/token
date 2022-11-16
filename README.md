@@ -1,6 +1,6 @@
-# Fructo Token (FRCTO)
+# Fructoland Token (FRLND)
 
-Fructo Token is part of our restructure to become a DAO.
+The Fructoland Token (FRLND) is part of our restructure to become a DAO.
 
 ### Usage:
 
@@ -12,7 +12,7 @@ npm i
 
 Test token:
 ```console
-npx hardhat test
+npx test
 ```
 
 Deploy token:
