@@ -3,7 +3,8 @@
 	"private": true,
 	"scripts": {
 		"build": "hardhat compile && cp artifacts/contracts/FructoToken.sol/FructoToken.json site/src/assets/abi.json",
-		"test": "hardhat test"
+		"test": "hardhat test",
+		"deploy:localhost": "hardhat run scripts/deploy.ts --network localhost"
 	},
   	"devDependencies": {
     	"@nomicfoundation/hardhat-toolbox": "^2.0.0",

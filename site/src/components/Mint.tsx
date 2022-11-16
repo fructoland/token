@@ -3,7 +3,8 @@ import { abi } from "../assets/abi.json";
 import { useAccount, useConnect, useNetwork, useSwitchNetwork, usePrepareContractWrite, useContractWrite } from "wagmi";
 import { InjectedConnector } from "wagmi/connectors/injected";
 import { BigNumber, ethers } from "ethers";
-import {CHAIN} from "../main";
+import { CHAIN } from "../main";
+import Dialog from "./Dialog";
 
 interface Props {
 	mintingFee: BigNumber;
@@ -12,9 +13,10 @@ interface Props {
 }
 
 export default function Mint({ mintingFee, isMintingFeeError, isMintingFeeLoading }: Props) {
+	const [ dialogOpen, setDialogOpen ] = useState(false);
 	const [ amountInput, setAmountInput ] = useState("1");
 	const { isConnected, address } = useAccount();
-	const { connect, isLoading: isAccountLoading } = useConnect({
+	const { connectors, connect, isLoading: isConnectLoading, pendingConnector } = useConnect({
 		connector: new InjectedConnector()
 	});
 
@@ -104,12 +106,38 @@ export default function Mint({ mintingFee, isMintingFeeError, isMintingFeeLoadin
 			</div>
 		</>
 	) : (
-		<button 
-			style={{ display: "block", margin: "0 auto" }}
-			onClick={() => connect()}
-			disabled={isAccountLoading}
-		>
-			{isAccountLoading ? "Connecting..." : "Connect Wallet"}
-		</button>
+		<>
+			<button 
+				style={{ display: "block", margin: "0 auto" }}
+				onClick={() => setDialogOpen(true)}
+			>
+				Connect Wallet
+			</button>
+			<Dialog
+				open={dialogOpen}
+				onClose={() => setDialogOpen(false)}
+			>
+				<p style={{ marginBottom: ".5rem" }}>
+					Connect your wallet
+				</p>
+				<div style={{ display: "flex", flexDirection: "column", gap: ".5rem" }}>
+					{connectors.map(connector => (
+						<button
+							disabled={!connector.ready || (isConnectLoading && connector.id === pendingConnector?.id)}
+							key={connector.id}
+							onClick={() => connect({ connector })}
+							style={{
+								width: "20rem"
+							}}
+						>
+							{connector.name}
+							{!connector.ready && ' (unsupported)'}
+							{isConnectLoading &&
+								connector.id === pendingConnector?.id && ' (connecting)'}
+						</button>
+					))}
+				</div>
+			</Dialog>
+		</>
 	)
 }
