@@ -9,20 +9,12 @@ import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 
 contract FructolandToken is ERC20, ERC20Burnable, Ownable, Pausable, ERC20Permit, ERC20Votes {
-	bool internal mintingEnabled;
-
     constructor() ERC20("Fructoland Token", "FRLND") ERC20Permit("Fructoland Token") {
-		_mint(msg.sender, 10000 * 10 ** decimals());
-		mintingEnabled = true;
+		_mint(msg.sender, 500 * 10 ** decimals());
 	}
 
-	function mint(address to, uint256 amount) public onlyOwner whenNotPaused {
-		require(mintingEnabled, "Minting is disabled");
+	function mint(address to, uint256 amount) public onlyOwner {
 		_mint(to, amount);
-	}
-
-	function setMintingEnabled(bool enabled) public onlyOwner {
-		mintingEnabled = enabled;
 	}
 
 	function pause() public onlyOwner {

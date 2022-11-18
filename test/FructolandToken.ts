@@ -85,10 +85,18 @@ describe("Fructoland Token (FRLND)", function () {
 
 			await expect(fructoToken.mint(otherAccount.address, 1)).to.be.revertedWith("Pausable: paused");
 		});
+
+		it("Should not be able to burn tokens when paused", async function () {
+			const { fructoToken } = await loadFixture(deployFructoTokenFixture);
+
+			await fructoToken.pause();
+
+			await expect(fructoToken.burn(1)).to.be.revertedWith("Pausable: paused");
+		});
 	});
 
 	describe("Minting and burning", function () {
-		it("Should be able to mint tokens", async function () {
+		it("Should allow owner to mint tokens", async function () {
 			const { fructoToken, otherAccount } = await loadFixture(deployFructoTokenFixture);
 
 			await fructoToken.mint(otherAccount.address, 1000);
