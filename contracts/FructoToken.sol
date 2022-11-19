@@ -5,6 +5,6 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract FructoToken is ERC20 {
     constructor() ERC20("Fructo Token", "FRCTO") {
-        _mint(msg.sender, 1000 * 10 ** decimals());
+        _mint(msg.sender, 1000000 * 10 ** decimals());
     }
 }
